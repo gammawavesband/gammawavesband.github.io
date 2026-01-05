@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>N 54° 32' 15” W 003° 34' 31”</title>
+
+  <style>
+    :root{
+      --marquee-speed: 22s;
+      --header-height: 150px;
+      --footer-height: 150px;
+      --max-width: 920px;
+
+      --bg: #dbdbdb;
+      --fg: #404040;
+
+      --gap: calc(100vh - var(--header-height) - var(--footer-height));
+      --card-top: clamp(24px, calc(var(--gap) * 0.22), 220px);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--fg);
+      height:100vh;
+      overflow:hidden;
+    }
+
+    .marquee{
+      position:fixed;
+      left:0;
+      width:100%;
+      overflow:hidden;
+      background:var(--bg);
+      z-index:10;
+    }
+    .marquee--top{ top:0; height:var(--header-height); }
+    .marquee--bottom{ bottom:0; height:var(--footer-height); }
+
+    .marquee__track{
+      display:flex;
+      width:max-content;
+      will-change:transform;
+    }
+    .marquee--top .marquee__track{
+      animation: marquee-left var(--marquee-speed) linear infinite;
+    }
+    .marquee--bottom .marquee__track{
+      animation: marquee-right var(--marquee-speed) linear infinite;
+    }
+
+    .marquee__content{
+      display:flex;
+      align-items:center;
+      white-space:nowrap;
+      font-size:100px;
+      line-height:1;
+      letter-spacing:-0.02em;
+      padding:22px 0 18px;
+    }
+    .marquee__content span{ padding-right:24px; }
+
+    @keyframes marquee-left{
+      from{ transform:translateX(0); }
+      to{ transform:translateX(-50%); }
+    }
+    @keyframes marquee-right{
+      from{ transform:translateX(-50%); }
+      to{ transform:translateX(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .marquee__track{ animation:none !important; }
+    }
+
+    main{
+      position:absolute;
+      top:var(--header-height);
+      bottom:var(--footer-height);
+      left:0;
+      right:0;
+      padding:0 20px;
+    }
+
+    form{
+      width:100%;
+      height:100%;
+      margin:0;
+    }
+
+    .step{
+      width:100%;
+      height:100%;
+      display:none;
+      align-items:flex-start;
+      justify-content:center;
+    }
+    .step.active{ display:flex; }
+
+    .card{
+      width:100%;
+      max-width:var(--max-width);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      padding-top: var(--card-top);
+    }
+
+    .kicker{
+      font-size:14px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      opacity:0.7;
+    }
+
+    .prompt{
+      font-size:32px;
+      letter-spacing:-0.02em;
+      line-height:1.15;
+      margin:0;
+    }
+
+    .description{
+      font-size:20px;
+      letter-spacing:-0.02em;
+      line-height:1.15;
+      margin:0;
+    }
+
+    .choices{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+
+    .choice{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-size:20px;
+      line-height:1.3;
+      padding:14px;
+      border:1px solid var(--fg);
+      cursor:pointer;
+      user-select:none;
+      background:transparent;
+    }
+    .choice input{ accent-color:var(--fg); }
+
+    .text{
+      width:100%;
+      font-size:20px;
+      padding:14px;
+      border:1px solid var(--fg);
+      outline:none;
+      font-family:inherit;
+      background:transparent;
+      color:var(--fg);
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+
+    button{
+      font-family:inherit;
+      font-size:18px;
+      padding:12px 16px;
+      border:1px solid var(--fg);
+      background:transparent;
+      color:var(--fg);
+      cursor:pointer;
+    }
+    button:disabled{
+      opacity:0.35;
+      cursor:not-allowed;
+    }
+
+    .error{
+      font-size:14px;
+    }
+
+    @media (max-width: 640px){
+      :root{
+        --header-height: 120px;
+        --footer-height: 120px;
+        --marquee-speed: 30s;
+
+        --gap: calc(100vh - var(--header-height) - var(--footer-height));
+        --card-top: clamp(18px, calc(var(--gap) * 0.12), 180px);
+      }
+
+      .marquee__content{ font-size:64px; }
+      .prompt{ font-size:26px; }
+      .choice{ font-size:18px; }
+      .text{ font-size:18px; }
+    }
+
+/* =========================
+   CLOSE → MARQUEE TAKEOVER
+========================= */
+
+#marqueeTakeover{
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+  transition: opacity 1200ms ease;
+}
+
+.takeover-row{
+  position: absolute;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.takeover-track{
+  display:flex;
+  width:max-content;
+  will-change: transform;
+}
+
+.takeover-content{
+  display:flex;
+  align-items:center;
+  white-space:nowrap;
+  font-size:100px;
+  line-height:1;
+  letter-spacing:-0.02em;
+  padding:10px 0;
+  color:var(--fg);
+}
+
+.fade-out-all {
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+
+
+.takeover-content span{ padding-right:48px; }
+
+@media (max-width: 640px){
+  .takeover-content{ font-size:64px; }
+}
+
+
+  </style>
+</head>
+
+<body>
+
+  <header class="marquee marquee--top">
+    <div class="marquee__track">
+      <div class="marquee__content" aria-hidden="true">
+        <span>
+          / Faust / Upside down / Can / Kazemir malevich / Beak&gt; / Loveless will tear us apart /
+          Olafur eliasson / Ox4 / Map ref 54 degrees N 003 degrees W / Everyday is like sunday /
+          Factory boy / Frank lloyd wright / European son /
+          Condition of the working class / Tomorrow never knows
+        </span>
+        <span>
+          / Faust / Upside down / Can / Kazemir malevich / Beak&gt; / Loveless will tear us apart /
+          Olafur eliasson / Ox4 / Map ref 54 degrees N 003 degrees W / Everyday is like sunday /
+          Factory boy / Frank lloyd wright / European son /
+          Condition of the working class / Tomorrow never knows
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <form id="signalForm" action="https://formspree.io/f/mwvprged" method="POST">
+      <input type="text" name="_gotcha" style="display:none" />
+
+      <section class="step active" data-step="0">
+        <div class="card">
+          <div class="kicker">N 54° 32' 15” W 003° 34' 31”</div>
+          <p class="prompt">Formed a band, we formed a band. Look at us, we formed a band.</p>
+          <p class="description">Want to join a band? Little or no musical experience preferred.</p>
+          <div class="actions">
+            <button type="button" class="next">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="step" data-step="1">
+        <div class="card">
+          <div class="kicker">1 / 3</div>
+          <p class="prompt">What do you want to play?</p>
+          <p class="description">Think Velvet Underground, Jesus and Mary Chain, Phil Spector, Krautrock.</p>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="instrument" value="Bass" required /> Bass
+            </label>
+            <label class="choice">
+              <input type="radio" name="instrument" value="Stand-up drums" /> Stand-up drums
+            </label>
+          </div>
+          <div class="actions">
+            <button type="button" class="prev">Back</button>
+            <button type="button" class="next" id="nextInstrument" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="step" data-step="2">
+        <div class="card">
+          <div class="kicker">2 / 3</div>
+          <p class="prompt">What are you listening to?</p>
+          <p class="description">Taste &gt; Knowledge. Albums, songs, artists — whatever.</p>
+          <input class="text" name="three_albums" placeholder="I'm listening to..." required />
+          <div class="actions">
+            <button type="button" class="prev">Back</button>
+            <button type="button" class="next" id="nextAlbums" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="step" data-step="3">
+        <div class="card">
+          <div class="kicker">3 / 3</div>
+          <p class="prompt">Do you wear black?</p>
+          <p class="description">I wear black on the outside because black is how i feel on the inside.</p>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="black" value="Exclusively" required /> Exclusively
+            </label>
+            <label class="choice">
+              <input type="radio" name="black" value="Occasionally" /> Occasionally
+            </label>
+            <label class="choice">
+              <input type="radio" name="black" value="Cool Enough" /> I'm cool enough
+            </label>
+          </div>
+          <div class="actions">
+            <button type="button" class="prev">Back</button>
+            <button type="button" class="next" id="nextBlack" disabled>Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="step" data-step="4">
+        <div class="card">
+          <div class="kicker">Contact</div>
+          <p class="prompt">How should we contact you?</p>
+          <p class="description">Email, phone, Instagram — anything that works.</p>
+
+          <!-- renamed email -> contact -->
+          <input class="text" name="contact" placeholder="Contact me via..." required />
+
+          <div class="actions">
+            <button type="button" class="prev">Back</button>
+            <button type="button" id="sendSignal" disabled>Submit</button>
+          </div>
+
+          <div class="error" id="sendError" style="display:none;"></div>
+        </div>
+      </section>
+
+      <section class="step" data-step="5">
+        <div class="card">
+          <div class="kicker">Nice One</div>
+          <p class="prompt" id="closePrompt">Done.</p>
+            <p class="description">If it feels like a fit, we’ll be in touch.</p>
+
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <footer class="marquee marquee--bottom">
+    <div class="marquee__track">
+      <div class="marquee__content" aria-hidden="true">
+        <span>
+          / Tomorrow never knows / Condition of the working class / European son / Frank lloyd wright /
+          Factory boy / Everyday is like sunday / Map ref 54 degrees N 003 degrees W / Ox4 / Olafur eliasson /
+          Loveless will tear us apart / Beak&gt; / Kazemir malevich / Can / Upside down / Faust
+        </span>
+        <span>
+          / Tomorrow never knows / Condition of the working class / European son / Frank lloyd wright /
+          Factory boy / Everyday is like sunday / Map ref 54 degrees N 003 degrees W / Ox4 / Olafur eliasson /
+          Loveless will tear us apart / Beak&gt; / Kazemir malevich / Can / Upside down / Faust
+        </span>
+      </div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  function ready(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn);
+    } else {
+      fn();
+    }
+  }
+
+  ready(() => {
+    try {
+      const form = document.getElementById("signalForm");
+      if (!form) throw new Error("Missing #signalForm");
+
+      const steps = Array.from(form.querySelectorAll(".step"));
+      if (!steps.length) throw new Error("No .step sections found inside #signalForm");
+
+      const nextInstrument = document.getElementById("nextInstrument");
+      const nextAlbums = document.getElementById("nextAlbums");
+      const nextBlack = document.getElementById("nextBlack");
+
+      const sendBtn = document.getElementById("sendSignal");
+      const sendError = document.getElementById("sendError");
+      const closePrompt = document.getElementById("closePrompt");
+
+      const albumsInput = form.querySelector('input[name="three_albums"]');
+      const contactInput = form.querySelector('input[name="contact"]');
+
+      const instrumentRadios = form.querySelectorAll('input[name="instrument"]');
+      const blackRadios = form.querySelectorAll('input[name="black"]');
+
+      if (!sendBtn) throw new Error("Missing #sendSignal button");
+      if (!albumsInput) throw new Error('Missing input[name="three_albums"]');
+      if (!contactInput) throw new Error('Missing input[name="contact"]');
+      if (!closePrompt) throw new Error("Missing #closePrompt");
+
+      // Ensure takeover container exists (you also have it in HTML; this is harmless)
+      let takeover = document.getElementById("marqueeTakeover");
+      if (!takeover) {
+        takeover = document.createElement("div");
+        takeover.id = "marqueeTakeover";
+        takeover.setAttribute("aria-hidden", "true");
+        document.body.appendChild(takeover);
+      }
+
+      // --- step navigation ---
+      function getActiveIndex() {
+        return steps.findIndex(s => s.classList.contains("active"));
+      }
+
+      function showIndex(i) {
+        const current = getActiveIndex();
+        if (current >= 0) steps[current].classList.remove("active");
+        const clamped = Math.max(0, Math.min(i, steps.length - 1));
+        steps[clamped].classList.add("active");
+      }
+
+      function showStep(stepValue) {
+        const idx = steps.findIndex(s => s.getAttribute("data-step") === String(stepValue));
+        if (idx === -1) throw new Error(`No step found with data-step="${stepValue}"`);
+        showIndex(idx);
+      }
+
+      // next/prev buttons
+      form.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        if (t.classList.contains("next")) showIndex(getActiveIndex() + 1);
+        if (t.classList.contains("prev")) showIndex(getActiveIndex() - 1);
+      });
+
+      // --- gating ---
+      function updateNextInstrument() {
+        if (!nextInstrument) return;
+        nextInstrument.disabled = !form.querySelector('input[name="instrument"]:checked');
+      }
+
+      function updateNextBlack() {
+        if (!nextBlack) return;
+        nextBlack.disabled = !form.querySelector('input[name="black"]:checked');
+      }
+
+      function updateNextAlbums() {
+        if (!nextAlbums) return;
+        nextAlbums.disabled = !albumsInput.value.trim();
+      }
+
+      function updateSendEnabled() {
+        if (sendError) {
+          sendError.style.display = "none";
+          sendError.textContent = "";
+        }
+        sendBtn.disabled = !contactInput.value.trim();
+      }
+
+      instrumentRadios.forEach(r => r.addEventListener("change", updateNextInstrument));
+      blackRadios.forEach(r => r.addEventListener("change", updateNextBlack));
+      albumsInput.addEventListener("input", updateNextAlbums);
+      contactInput.addEventListener("input", updateSendEnabled);
+      contactInput.addEventListener("change", updateSendEnabled);
+
+      updateNextInstrument();
+      updateNextBlack();
+      updateNextAlbums();
+      updateSendEnabled();
+
+      // --- takeover helpers ---
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function getMarqueeText() {
+        const topSpan = document.querySelector(".marquee--top .marquee__content span");
+        const raw = topSpan ? topSpan.textContent : "Faust / Can / Malevich / Tomorrow Never Knows";
+        return raw.trim().replace(/\s+/g, " ");
+      }
+
+      // Creates a row that is hidden until its animation is running, then fades in.
+      function makeRow({ topPx, direction, durationMs, opacityTarget }) {
+        // random row height: 100–250px
+        const heightPx = Math.floor(100 + Math.random() * 150);
+
+        const row = document.createElement("div");
+        row.className = "takeover-row";
+        row.style.top = `${topPx}px`;
+        row.style.height = `${heightPx}px`;
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+
+        // hidden until animation is running
+        row.style.opacity = "0";
+        row.style.transition = "opacity 900ms ease";
+
+        const track = document.createElement("div");
+        track.className = "takeover-track";
+
+        const content = document.createElement("div");
+        content.className = "takeover-content";
+
+        const text = escapeHtml(getMarqueeText());
+        content.innerHTML =
+          `<span>${text}</span><span>${text}</span>`;
+
+        track.appendChild(content);
+        row.appendChild(track);
+        takeover.appendChild(row);
+
+        const keyframes =
+          direction === "left"
+            ? [{ transform: "translateX(0)" }, { transform: "translateX(-50%)" }]
+            : [{ transform: "translateX(-50%)" }, { transform: "translateX(0)" }];
+
+        // start immediately
+        const anim = track.animate(keyframes, {
+          duration: durationMs,
+          iterations: Infinity,
+          easing: "linear"
+        });
+
+        // start mid-cycle so it's already moving
+        anim.currentTime = Math.random() * durationMs;
+
+        // fade in on next frame (after animation starts)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            row.style.opacity = String(opacityTarget);
+          });
+        });
+      }
+
+      function triggerTakeover() {
+        // wait 5s on close screen
+        setTimeout(() => {
+          // fade out the entire close card
+          const closeCard = closePrompt.closest(".card");
+          if (closeCard) closeCard.classList.add("fade-out-all");
+
+          // bring in takeover
+          setTimeout(() => {
+            takeover.style.opacity = "1";
+            takeover.innerHTML = "";
+
+            const h = window.innerHeight;
+
+            // Fill down the page with varied heights (tiling)
+            let y = 0;
+            while (y < h + 80) {
+              const direction = Math.random() > 0.5 ? "left" : "right";
+              const durationMs = Math.floor(12000 + Math.random() * 28000);
+              const opacityTarget = Number((0.20 + Math.random() * 0.70).toFixed(2));
+
+              makeRow({
+                topPx: y + Math.floor(Math.random() * 10),
+                direction,
+                durationMs,
+                opacityTarget
+              });
+
+              // advance by a new random height in the same range
+              y += Math.floor(100 + Math.random() * 150);
+            }
+
+            // occasional new row
+            const addMore = setInterval(() => {
+              if (takeover.style.opacity !== "1") {
+                clearInterval(addMore);
+                return;
+              }
+
+              makeRow({
+                topPx: Math.floor(Math.random() * (window.innerHeight - 120)),
+                direction: Math.random() > 0.5 ? "left" : "right",
+                durationMs: Math.floor(12000 + Math.random() * 28000),
+                opacityTarget: Number((0.15 + Math.random() * 0.55).toFixed(2))
+              });
+
+              const existing = takeover.querySelectorAll(".takeover-row");
+              if (existing.length > 22) existing[0].remove();
+            }, 1600);
+
+          }, 650);
+        }, 5000);
+      }
+
+      // --- submit ---
+      sendBtn.addEventListener("click", async () => {
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        if (sendError) {
+          sendError.style.display = "none";
+          sendError.textContent = "";
+        }
+
+        const originalText = sendBtn.textContent;
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Sending…";
+
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            mode: "cors",
+            body: new FormData(form),
+            headers: { "Accept": "application/json" }
+          });
+
+          if (!res.ok) {
+            let msg = `Submit failed (${res.status}).`;
+            try {
+              const data = await res.json();
+              if (data && data.errors && data.errors[0] && data.errors[0].message) {
+                msg += " " + data.errors[0].message;
+              }
+            } catch {}
+            throw new Error(msg);
+          }
+
+          // go to close screen
+          showStep("5");
+
+          // start takeover sequence
+          triggerTakeover();
+
+        } catch (err) {
+          if (sendError) {
+            sendError.style.display = "block";
+            sendError.textContent = (err && err.message) ? err.message : "Something went wrong.";
+          }
+          sendBtn.disabled = false;
+          sendBtn.textContent = originalText;
+        }
+      });
+
+    } catch (err) {
+      const div = document.createElement("div");
+      div.style.position = "fixed";
+      div.style.left = "16px";
+      div.style.bottom = "16px";
+      div.style.padding = "10px 12px";
+      div.style.border = "1px solid #404040";
+      div.style.background = "#dbdbdb";
+      div.style.color = "#404040";
+      div.style.fontFamily = "Helvetica, Arial, sans-serif";
+      div.style.fontSize = "14px";
+      div.style.zIndex = "10000";
+      div.textContent = "Script error: " + (err && err.message ? err.message : String(err));
+      document.body.appendChild(div);
+    }
+  });
+})();
+</script>
+
+
+
+<div id="marqueeTakeover" aria-hidden="true"></div>
+
+
+</body>
+</html>
