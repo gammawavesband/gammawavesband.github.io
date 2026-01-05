@@ -205,6 +205,102 @@
       .text{ font-size:18px; }
     }
 
+
+    /* =========================================
+   SMALL PHONE TUNING (iPhone 13 ~ 390px wide)
+   ========================================= */
+@media (max-width: 430px){
+
+  :root{
+    --header-height: 84px;
+    --footer-height: 84px;
+    --marquee-speed: 32s;
+
+    /* pull the card higher + reduce wasted top space */
+    --gap: calc(100vh - var(--header-height) - var(--footer-height));
+    --card-top: clamp(10px, calc(var(--gap) * 0.10), 90px);
+  }
+
+  /* top/bottom marquees */
+  .marquee__content{
+    font-size: clamp(34px, 9vw, 48px);
+    padding: 14px 0 12px;
+    letter-spacing: -0.02em;
+  }
+  .marquee__content span{
+    padding-right: 26px; /* tighter gap between repeats */
+  }
+
+  /* form typography */
+  .prompt{
+    font-size: clamp(18px, 5.2vw, 22px);
+    line-height: 1.12;
+  }
+  .description{
+    font-size: clamp(14px, 4.2vw, 17px);
+    line-height: 1.15;
+  }
+
+  .choice{
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .text{
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  button{
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  .kicker{
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+
+  /* full-screen takeover marquees */
+  .takeover-content{
+    font-size: clamp(34px, 9vw, 52px);
+    padding: 6px 0;
+  }
+  .takeover-content span{
+    padding-right: 26px;
+  }
+}
+
+/* =========================================
+   EXTRA SMALL PHONES (<= iPhone SE / 375px)
+   ========================================= */
+@media (max-width: 375px){
+
+  :root{
+    --header-height: 76px;
+    --footer-height: 76px;
+    --card-top: clamp(8px, calc(var(--gap) * 0.08), 80px);
+  }
+
+  .marquee__content{
+    font-size: clamp(30px, 8.6vw, 44px);
+  }
+
+  .prompt{
+    font-size: clamp(17px, 5.4vw, 21px);
+  }
+  .description{
+    font-size: clamp(13px, 4.2vw, 16px);
+  }
+
+  .choice, .text{ font-size: 15px; }
+
+  .takeover-content{
+    font-size: clamp(30px, 8.6vw, 48px);
+  }
+}
+
+
 /* =========================
    CLOSE → MARQUEE TAKEOVER
 ========================= */
